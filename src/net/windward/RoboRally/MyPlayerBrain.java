@@ -149,6 +149,12 @@ public class MyPlayerBrain {
 				}
 		
 		
+		if (map.GetSquare(myLocation.getMapPosition()).getConveyor() != null ||
+			map.GetSquare(myLocation.getMapPosition()).getType() == MapSquare.TYPE.ROTATE_CLOCKWISE ||
+			map.GetSquare(myLocation.getMapPosition()).getType() == MapSquare.TYPE.ROTATE_COUNTERCLOCKWISE){
+			if (toMove <= 0) return -1;
+		}
+				
 		BoardLocation finalLocation = myLocation.move(toMove);
 		finalLocation = finalLocation.Rotate(toTurn);
 		
@@ -206,6 +212,7 @@ public class MyPlayerBrain {
 			// flag
 			MapSquare finalSquare = map.GetSquare(finalLocation.getMapPosition());
 			if (finalSquare.getType() == MapSquare.TYPE.PIT) return -1;
+
 			
 			int currentT = 1;
 			FlagState target = null;
