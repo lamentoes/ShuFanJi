@@ -111,6 +111,7 @@ public class Framework implements IPlayerCallback
 		}
 		catch (RuntimeException ex)
 		{
+			ex.printStackTrace();
 			TRAP.trap();
 			System.out.println(String.format("Error on incoming message. Exception: %1$s", ex));
 		}

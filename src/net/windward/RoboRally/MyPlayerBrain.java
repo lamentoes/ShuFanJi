@@ -108,7 +108,6 @@ public class MyPlayerBrain {
 	}
 	
 	
-	
 	private float score(GameMap map, Card.ROBOT_MOVE m, Player you, int priority, HashMap<BoardLocation, Player> playerPlace){
 		float push = 0, fire = 0, flag = 0;
 		BoardLocation myLocation = you.getRobot().getLocation();
@@ -152,6 +151,9 @@ public class MyPlayerBrain {
 		
 		BoardLocation finalLocation = myLocation.move(toMove);
 		finalLocation = finalLocation.Rotate(toTurn);
+		
+		if (!(this.isPositionValid(map, finalLocation))) return -1;
+		
 		if (playerPlace.containsKey(finalLocation)) {
 			Player pushed = playerPlace.get(finalLocation);
 			float dmgFactor = (pushed.getDamage() / 10f) * 0.2f;
@@ -202,13 +204,16 @@ public class MyPlayerBrain {
 			}
 
 			// flag
-
-			MapSquare finalSquare = map.GetSquare(finalLocation
-					.getMapPosition());
+			MapSquare finalSquare = map.GetSquare(finalLocation.getMapPosition());
+			if (finalSquare.getType() == MapSquare.TYPE.PIT) return -1;
+			
 			int currentT = 1;
+			FlagState target = null;
 			for (int i = 0; i < 3; i++) {
 				if (you.getFlagStates().get(i).getTouched())
 					currentT++;
+				else {
+					target = you.getFlagStates().get(i); break;}
 			}
 			if (currentT > 3)
 				flag = 0f;
@@ -216,7 +221,17 @@ public class MyPlayerBrain {
 			else if (finalSquare.getFlag() == currentT) {
 				flag = 5;
 			}
-			return push + fire + flag;
+			
+			// distance to target flag
+			
+			float distance = 0;
+			if (target != null) {
+				double disToTar = Math.pow ((finalLocation.getMapPosition().x - target.getPosition().x),2) +  Math.pow ((finalLocation.getMapPosition().y - target.getPosition().y),2);
+				distance = (float) (1 / disToTar);
+			}
+			
+			
+			return push + fire + flag + distance;
 	}
 
 	/**
@@ -240,30 +255,33 @@ public class MyPlayerBrain {
 			java.util.List<Player> allPlayers, java.util.List<Card> cards) {
 		HashMap<BoardLocation, Player> playerPlace = new HashMap<BoardLocation, Player>();
 
+		
+		
 		for (Player p : allPlayers) {
 			if (p.getIsVisible()) {
 				playerPlace.put(p.getRobot().getLocation(), p);
 			}
 		}
 
-		Card maxCard = null;
-		float maxScore = Float.MIN_VALUE;
+		Card maxCard = null;	
+		float maxScore = Float.NEGATIVE_INFINITY;
 		for (Card c : cards) {
-			float push = 0, fire = 0, flag = 0;
 			Card.ROBOT_MOVE m = c.getMove();
 			float totalScore = this.score(map, m, you, c.getPriority(), playerPlace);
-			totalScore = fire + push + flag;
 			if (totalScore > maxScore) {
 				maxScore = totalScore;
 				maxCard = c;
 			}
 		}
+		
+		
 
 		// if hurt bad, consider power down
 		boolean powerDown = false;
-		if ((you.getDamage() > 5) && (rand.nextInt(3) == 0))
+		if (you.getDamage() >= 7)
 			powerDown = true;
-		
+
+		if (maxCard == null) System.out.println("i am getting a freaking null pointer becasue the number of cards are " + cards.size());
 		java.util.ArrayList<Card> arrCards = new java.util.ArrayList<Card>();
 		arrCards.add(maxCard);
 
@@ -300,8 +318,7 @@ public class MyPlayerBrain {
 //				}
 //
 //			// add in the locked cards
-//			for (int ind = NUM_CARDS - you.getNumLockedCards(); ind < NUM_CARDS; ind++)
-//				moveCards[ind] = you.getCards().get(ind).clone();
+
 //
 //			// run it
 //			Utilities.MovePoint mp = Utilities.CardDestination(map, you
