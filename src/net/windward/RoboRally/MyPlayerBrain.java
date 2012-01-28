@@ -285,10 +285,11 @@ public class MyPlayerBrain {
 
 		// if hurt bad, consider power down
 		boolean powerDown = false;
-		if (you.getDamage() >= 7)
+		if (you.getDamage() >= 6 && you.getLives() == 1)
 			powerDown = true;
 
 		if (maxCard == null) System.out.println("i am getting a freaking null pointer becasue the number of cards are " + cards.size());
+		if (maxCard == null) maxCard = you.getCards().get(0).clone();
 		java.util.ArrayList<Card> arrCards = new java.util.ArrayList<Card>();
 		arrCards.add(maxCard);
 
