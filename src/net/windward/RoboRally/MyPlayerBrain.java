@@ -263,65 +263,71 @@ public class MyPlayerBrain {
 		boolean powerDown = false;
 		if ((you.getDamage() > 5) && (rand.nextInt(3) == 0))
 			powerDown = true;
-
-		// get 40 sets, pick the one that's closest to the flag
-		Card[] best = null;
-		int bestDiff = Integer.MAX_VALUE;
-		int okDiff = rand.nextInt(3);
-		FlagState fs = null;
-		for (FlagState fsOn : you.getFlagStates())
-			if (!fsOn.getTouched()) {
-				fs = fsOn;
-				break;
-			}
-
-		// get the flags, middle of the board if have them all.
-		Point ptFlag = fs == null ? new Point(map.getWidth() / 2,
-				map.getHeight() / 2) : fs.getPosition();
-		for (int turnOn = 0; turnOn < 40; turnOn++) {
-			// pick NUM_CARDS (or fewer if locked) random cards
-			Card[] moveCards = new Card[NUM_CARDS];
-			boolean[] cardUsed = new boolean[cards.size()];
-			for (int ind = 0; ind < NUM_CARDS - you.getNumLockedCards(); ind++)
-				for (int iter = 0; iter < 100; iter++) // in case can't work it
-														// with these cards
-				{
-					int index = rand.nextInt(cards.size());
-					if (cardUsed[index])
-						continue;
-					moveCards[ind] = cards.get(index).clone();
-					cardUsed[index] = true;
-					break;
-				}
-
-			// add in the locked cards
-			for (int ind = NUM_CARDS - you.getNumLockedCards(); ind < NUM_CARDS; ind++)
-				moveCards[ind] = you.getCards().get(ind).clone();
-
-			// run it
-			Utilities.MovePoint mp = Utilities.CardDestination(map, you
-					.getRobot().getLocation().clone(), moveCards);
-			if (mp.getDead())
-				continue;
-
-			// if better than before, use it
-			int diff = Math.abs(ptFlag.x - mp.getLocation().getMapPosition().x)
-					+ Math.abs(ptFlag.y - mp.getLocation().getMapPosition().y);
-			if (diff <= okDiff) {
-				java.util.ArrayList<Card> arrCards = new java.util.ArrayList<Card>();
-				Collections.addAll(arrCards, moveCards);
-				return new PlayerTurn(arrCards, powerDown);
-			}
-			if (diff < bestDiff) {
-				bestDiff = diff;
-				best = moveCards;
-			}
-		}
-
-		if (best == null)
-			return new PlayerTurn(new java.util.ArrayList<Card>(), powerDown);
+		
 		java.util.ArrayList<Card> arrCards = new java.util.ArrayList<Card>();
-		Collections.addAll(arrCards, best);
+		arrCards.add(maxCard);
+
+		
+		//
+//		// get 40 sets, pick the one that's closest to the flag
+//		Card[] best = null;
+//		int bestDiff = Integer.MAX_VALUE;
+//		int okDiff = rand.nextInt(3);
+//		FlagState fs = null;
+//		for (FlagState fsOn : you.getFlagStates())
+//			if (!fsOn.getTouched()) {
+//				fs = fsOn;
+//				break;
+//			}
+//
+//		// get the flags, middle of the board if have them all.
+//		Point ptFlag = fs == null ? new Point(map.getWidth() / 2,
+//				map.getHeight() / 2) : fs.getPosition();
+//		for (int turnOn = 0; turnOn < 40; turnOn++) {
+//			// pick NUM_CARDS (or fewer if locked) random cards
+//			Card[] moveCards = new Card[NUM_CARDS];
+//			boolean[] cardUsed = new boolean[cards.size()];
+//			for (int ind = 0; ind < NUM_CARDS - you.getNumLockedCards(); ind++)
+//				for (int iter = 0; iter < 100; iter++) // in case can't work it
+//														// with these cards
+//				{
+//					int index = rand.nextInt(cards.size());
+//					if (cardUsed[index])
+//						continue;
+//					moveCards[ind] = cards.get(index).clone();
+//					cardUsed[index] = true;
+//					break;
+//				}
+//
+//			// add in the locked cards
+//			for (int ind = NUM_CARDS - you.getNumLockedCards(); ind < NUM_CARDS; ind++)
+//				moveCards[ind] = you.getCards().get(ind).clone();
+//
+//			// run it
+//			Utilities.MovePoint mp = Utilities.CardDestination(map, you
+//					.getRobot().getLocation().clone(), moveCards);
+//			if (mp.getDead())
+//				continue;
+//
+//			// if better than before, use it
+//			int diff = Math.abs(ptFlag.x - mp.getLocation().getMapPosition().x)
+//					+ Math.abs(ptFlag.y - mp.getLocation().getMapPosition().y);
+//			if (diff <= okDiff) {
+//				java.util.ArrayList<Card> arrCards = new java.util.ArrayList<Card>();
+//				Collections.addAll(arrCards, moveCards);
+//				return new PlayerTurn(arrCards, powerDown);
+//			}
+//			if (diff < bestDiff) {
+//				bestDiff = diff;
+//				best = moveCards;
+//			}
+//		}
+//
+//		if (best == null)
+//			return new PlayerTurn(new java.util.ArrayList<Card>(), powerDown);
+//		java.util.ArrayList<Card> arrCards = new java.util.ArrayList<Card>();
+//		Collections.addAll(arrCards, best);
+		
 		return new PlayerTurn(arrCards, powerDown);
 	}
 }
