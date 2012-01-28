@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 
 /**
  The sample C# AI. Start with this project but write your own code as this is a very simplistic implementation of the AI.
@@ -17,8 +18,8 @@ public class MyPlayerBrain
 {
 	private static final int NUM_CARDS = 1;
 
-	private String name = "James Gosling";
-	private String password;
+	private String name = "shufanji";
+	private String password = "8888";
 	private byte[] avatar;
 
 	private final java.util.Random rand = new java.util.Random();
@@ -85,6 +86,12 @@ public class MyPlayerBrain
 		return new BoardLocation(robotStart.get(0), MapSquare.DIRECTION.NORTH);
 	}
 
+	
+	private boolean isPositionValid(GameMap map, BoardLocation bl)
+	{
+		Point p = bl.getMapPosition();
+		return p.x < map.getWidth() && p.x >= 0 && p.y < map.getHeight() && p.y >= 0;
+	}
 	/**
 	 Called each time the system needs another turn. If you do not return a valid turn, the game will randomly move one of your units.
 	 This call must return in under 1 second. If it has not returned in 1 second the call will be aborted and a random move will be assigned.
@@ -97,6 +104,103 @@ public class MyPlayerBrain
 	*/
 	public final PlayerTurn Turn(GameMap map, Player you, java.util.List<Player> allPlayers, java.util.List<Card> cards)
 	{
+		HashMap<BoardLocation, Player> playerPlace = new HashMap<BoardLocation, Player>();
+		
+		for (Player p : allPlayers){
+			if (p.getIsVisible()){
+				playerPlace.put(p.getRobot().getLocation(),p);
+			}
+		}
+		
+		Card maxCard = null;
+		float maxScore = Float.MIN_VALUE;
+		for (Card c : cards){
+			float push = 0, fire = 0, flag = 0;
+			Card.ROBOT_MOVE m = c.getMove();
+			BoardLocation myLocation = you.getRobot().getLocation();
+			float totalScore = 0;
+			switch (m){
+				case BACKWARD_ONE:
+					// push
+					push = 1;
+					BoardLocation finalLocation = myLocation.move(-1);
+					if (playerPlace.containsKey(finalLocation)){
+						Player pushed = playerPlace.get(finalLocation);
+						float dmgFactor = (pushed.getDamage() / 10f) * 0.2f;
+						float priFactor = (c.getPriority() - 10) / 980f * 0.8f;
+						push = 2 * (dmgFactor + priFactor);
+						
+						Point pushedTo = pushed.getRobot().getLocation().move(-1).getMapPosition();
+						try {
+								if (map.GetSquare(pushedTo).getType() == MapSquare.TYPE.PIT){
+									push = push + 5 * (dmgFactor + priFactor);
+								}
+						} catch (Exception e){
+						}
+						
+					// fire	
+					for (BoardLocation b = finalLocation; isPositionValid(map, b); b = b.move(1)){
+						int w = map.GetSquare(b.getMapPosition()).getWalls();
+						boolean stop = false;
+						switch (w){
+							case MapSquare.SIDE_NONE:
+								break;
+							case MapSquare.SIDE_EAST:
+								if (finalLocation.getDirection() == MapSquare.DIRECTION.EAST) stop = true;
+								break;
+							case MapSquare.SIDE_NORTH:
+								if (finalLocation.getDirection() == MapSquare.DIRECTION.NORTH) stop = true;
+								break;
+							case MapSquare.SIDE_WEST:
+								if (finalLocation.getDirection() == MapSquare.DIRECTION.WEST) stop = true;
+								break;
+							case MapSquare.SIDE_SOUTH:
+								if (finalLocation.getDirection() == MapSquare.DIRECTION.SOUTH) stop = true;
+								break;
+						}
+					    if (stop) break;
+						if (playerPlace.containsKey(b)) {
+							fire = 1;
+							break;
+						}
+					}
+					
+					
+					// flag
+					
+					MapSquare finalSquare = map.GetSquare(finalLocation.getMapPosition());
+					int currentT = 1;
+					for (int i = 0 ; i < 3; i++){
+						if (you.getFlagStates().get(i).getTouched()) currentT++;
+					}
+					if (currentT > 3) flag = 0f;
+					
+					else if (finalSquare.getFlag() == currentT) {
+						flag = 5;
+					}
+					}
+					break;
+				case FORWARD_ONE:
+					break;
+				case FORWARD_TWO:
+					break;
+				case FORWARD_THREE:
+					break;
+				case ROTATE_LEFT:
+					break;
+				case ROTATE_RIGHT:
+					break;
+				case ROTATE_UTURN:
+					break;
+				
+			}
+			
+			totalScore = fire + push + flag;
+			if (totalScore > maxScore){
+				maxScore = totalScore;
+				maxCard = c;
+			}
+		}
 
 		// if hurt bad, consider power down
 		boolean powerDown = false;
